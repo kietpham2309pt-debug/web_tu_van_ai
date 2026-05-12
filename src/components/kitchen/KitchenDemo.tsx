@@ -10,6 +10,7 @@ import {
   Download,
   RefreshCcw,
   AlertCircle,
+  FileText,
 } from "lucide-react";
 import type { ComboTier, Scenario } from "@/types";
 import { SCENARIO_BY_ID } from "@/data/scenarios";
@@ -17,6 +18,7 @@ import { LAYOUTS, STYLES, type KitchenLayout, type KitchenStyle } from "@/lib/ki
 import { type Element, META_FOR_PROMPT } from "@/lib/feng-shui-meta";
 import { cn, formatPrice } from "@/lib/utils";
 import ProductGroupPanel from "./ProductGroupPanel";
+import OrderConfirmModal from "./OrderConfirmModal";
 
 type Props = {
   initialScenarioId?: string;
@@ -48,6 +50,7 @@ export default function KitchenDemo({ initialScenarioId, initialTier, initialEle
   const [image, setImage] = useState<string | null>(null);
   const [prompt, setPrompt] = useState<string | null>(null);
   const [meta, setMeta] = useState<{ provider?: string; model?: string; fallback?: string } | null>(null);
+  const [pdfOpen, setPdfOpen] = useState(false);
 
   const tier = scenario.tiers.find((t) => t.tier === tierLetter) ?? scenario.tiers[0];
 
@@ -154,6 +157,14 @@ export default function KitchenDemo({ initialScenarioId, initialTier, initialEle
               >
                 <Download className="h-4 w-4" /> Tải ảnh
               </a>
+            )}
+            {image && (
+              <button
+                onClick={() => setPdfOpen(true)}
+                className="inline-flex items-center gap-2 rounded-xl bg-amber-700 px-4 py-3 font-semibold text-white hover:bg-amber-800"
+              >
+                <FileText className="h-4 w-4" /> Xuất biên bản PDF
+              </button>
             )}
             <button
               onClick={() => {
@@ -313,6 +324,19 @@ export default function KitchenDemo({ initialScenarioId, initialTier, initialEle
           </Link>
         </aside>
       </div>
+
+      {image && (
+        <OrderConfirmModal
+          open={pdfOpen}
+          onClose={() => setPdfOpen(false)}
+          scenario={scenario}
+          tier={tier}
+          layout={layout}
+          style={style}
+          element={element}
+          imageDataUrl={image}
+        />
+      )}
     </div>
   );
 }

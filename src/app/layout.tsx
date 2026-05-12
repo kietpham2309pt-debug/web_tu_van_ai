@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import { BASE_URL, SITE_NAME, SITE_DESCRIPTION } from "@/lib/seo";
+import { BASE_URL, SITE_NAME, SITE_DESCRIPTION, BNB_FAVICON } from "@/lib/seo";
 
 const inter = Inter({
   subsets: ["latin", "vietnamese"],
@@ -54,6 +54,11 @@ export const metadata: Metadata = {
     description: SITE_DESCRIPTION,
   },
   robots: { index: true, follow: true },
+  icons: {
+    icon: BNB_FAVICON,
+    shortcut: BNB_FAVICON,
+    apple: BNB_FAVICON,
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

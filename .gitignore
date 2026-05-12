@@ -7,3 +7,5 @@ build
 *.log
 tsconfig.tsbuildinfo
 *.docx
+
+.vercel
