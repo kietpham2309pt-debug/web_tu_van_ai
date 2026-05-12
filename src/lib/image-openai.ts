@@ -1,10 +1,11 @@
 import OpenAI from "openai";
 
-/**
- * Sinh ảnh bằng OpenAI gpt-image-1. Cần verify Organization mới dùng được.
- * Trả về data URL `data:image/png;base64,...`
- */
-export async function generateOpenAIImage(prompt: string): Promise<string> {
+export type OpenAIImageQuality = "low" | "medium" | "high";
+
+export async function generateOpenAIImage(
+  prompt: string,
+  quality: OpenAIImageQuality = "medium"
+): Promise<string> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error("Thiếu OPENAI_API_KEY trong .env.local");
 
@@ -13,7 +14,7 @@ export async function generateOpenAIImage(prompt: string): Promise<string> {
     model: "gpt-image-1",
     prompt,
     size: "1536x1024",
-    quality: "medium",
+    quality,
     n: 1,
   });
 

@@ -51,6 +51,7 @@ export default function KitchenDemo({ initialScenarioId, initialTier, initialEle
   const [prompt, setPrompt] = useState<string | null>(null);
   const [meta, setMeta] = useState<{ provider?: string; model?: string; fallback?: string } | null>(null);
   const [pdfOpen, setPdfOpen] = useState(false);
+  const [quality, setQuality] = useState<"medium" | "high">("medium");
 
   const tier = scenario.tiers.find((t) => t.tier === tierLetter) ?? scenario.tiers[0];
 
@@ -68,6 +69,7 @@ export default function KitchenDemo({ initialScenarioId, initialTier, initialEle
           layout,
           style,
           fengShuiHint: element ? META_FOR_PROMPT[element] : undefined,
+          quality,
         }),
       });
       const data = await res.json();
@@ -106,7 +108,9 @@ export default function KitchenDemo({ initialScenarioId, initialTier, initialEle
                 <Loader2 className="h-10 w-10 animate-spin" />
                 <div className="text-sm font-semibold">AI đang vẽ căn bếp của bạn...</div>
                 <div className="px-6 text-center text-xs text-stone-300">
-                  Thời gian dự kiến: 40-90 giây · Đôi khi 1-2 phút khi OpenAI bận. Vui lòng đợi, không tải lại trang.
+                  {quality === "high"
+                    ? "Chất lượng cao: 90-180 giây · Có thể tới 3 phút khi OpenAI bận. Vui lòng đợi, không tải lại trang."
+                    : "Thời gian dự kiến: 40-90 giây · Đôi khi 1-2 phút khi OpenAI bận. Vui lòng đợi, không tải lại trang."}
                 </div>
               </div>
             )}
@@ -285,6 +289,43 @@ export default function KitchenDemo({ initialScenarioId, initialTier, initialEle
                 </button>
               ))}
             </div>
+          </Panel>
+
+          <Panel title="Chất lượng ảnh AI">
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => setQuality("medium")}
+                className={cn(
+                  "rounded-lg border-2 px-3 py-2 text-left text-sm transition",
+                  quality === "medium"
+                    ? "border-amber-700 bg-amber-50/40"
+                    : "border-stone-200 hover:border-stone-400"
+                )}
+              >
+                <div className="font-semibold">Tiêu chuẩn</div>
+                <div className="mt-0.5 text-[11px] text-stone-500">
+                  ~$0.042/ảnh · 40-90s
+                </div>
+              </button>
+              <button
+                onClick={() => setQuality("high")}
+                className={cn(
+                  "rounded-lg border-2 px-3 py-2 text-left text-sm transition",
+                  quality === "high"
+                    ? "border-amber-700 bg-amber-50/40"
+                    : "border-stone-200 hover:border-stone-400"
+                )}
+              >
+                <div className="font-semibold">Cao cấp</div>
+                <div className="mt-0.5 text-[11px] text-stone-500">
+                  ~$0.167/ảnh · 1.5-3 phút · sắc nét, chi tiết hơn
+                </div>
+              </button>
+            </div>
+            <p className="mt-2 text-[11px] text-stone-500">
+              Ảnh chốt với khách: nên dùng "Cao cấp" cho chi tiết thiết bị
+              chính xác hơn.
+            </p>
           </Panel>
 
           <Panel title="Phong thuỷ (tuỳ chọn)">

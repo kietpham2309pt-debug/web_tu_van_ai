@@ -3,7 +3,7 @@ import { buildKitchenPrompt, type KitchenLayout, type KitchenStyle } from "@/lib
 import { SCENARIO_BY_ID } from "@/data/scenarios";
 import type { ComboTier } from "@/types";
 import { generateGeminiImage } from "@/lib/image-gemini";
-import { generateOpenAIImage } from "@/lib/image-openai";
+import { generateOpenAIImage, type OpenAIImageQuality } from "@/lib/image-openai";
 import { generatePollinationsImage } from "@/lib/image-pollinations";
 
 export const runtime = "nodejs";
@@ -18,6 +18,7 @@ type Body = {
   style: KitchenStyle;
   provider?: Provider;
   fengShuiHint?: string;
+  quality?: OpenAIImageQuality;
 };
 
 function pickDefaultProvider(): Provider {
@@ -49,8 +50,10 @@ export async function POST(req: Request) {
     fengShuiHint: body.fengShuiHint,
   });
 
+  const quality: OpenAIImageQuality = body.quality ?? "medium";
+
   async function call(p: Provider): Promise<string> {
-    if (p === "openai") return generateOpenAIImage(prompt);
+    if (p === "openai") return generateOpenAIImage(prompt, quality);
     if (p === "gemini") return generateGeminiImage(prompt);
     return generatePollinationsImage(prompt);
   }
