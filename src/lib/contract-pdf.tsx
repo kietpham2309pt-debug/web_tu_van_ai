@@ -87,7 +87,6 @@ const styles = StyleSheet.create({
     fontSize: 8,
     color: "#78716c",
     marginTop: 4,
-    fontStyle: "italic",
     textAlign: "center",
   },
   table: { marginVertical: 6 },
