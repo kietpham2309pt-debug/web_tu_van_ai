@@ -49,7 +49,13 @@ export default function KitchenDemo({ initialScenarioId, initialTier, initialEle
   const [error, setError] = useState<string | null>(null);
   const [image, setImage] = useState<string | null>(null);
   const [prompt, setPrompt] = useState<string | null>(null);
-  const [meta, setMeta] = useState<{ provider?: string; model?: string; fallback?: string } | null>(null);
+  const [meta, setMeta] = useState<{
+    provider?: string;
+    model?: string;
+    fallback?: string;
+    mode?: string;
+    referencesUsed?: number;
+  } | null>(null);
   const [pdfOpen, setPdfOpen] = useState(false);
   const [quality, setQuality] = useState<"medium" | "high">("medium");
 
@@ -76,7 +82,13 @@ export default function KitchenDemo({ initialScenarioId, initialTier, initialEle
       if (!res.ok) throw new Error(data.error || "Lỗi không xác định");
       setImage(data.imageUrl);
       setPrompt(data.prompt);
-      setMeta({ provider: data.provider, model: data.model, fallback: data.fallback });
+      setMeta({
+        provider: data.provider,
+        model: data.model,
+        fallback: data.fallback,
+        mode: data.mode,
+        referencesUsed: data.referencesUsed,
+      });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Lỗi";
       setError(msg);
@@ -195,6 +207,11 @@ export default function KitchenDemo({ initialScenarioId, initialTier, initialEle
               <span className="rounded-md bg-stone-100 px-2 py-1">
                 Model: <strong className="text-stone-900">{meta.model}</strong>
               </span>
+              {meta.mode === "compose-with-references" && (
+                <span className="rounded-md bg-emerald-100 px-2 py-1 text-emerald-900">
+                  ✓ Dùng <strong>{meta.referencesUsed}</strong> ảnh sản phẩm làm tham chiếu
+                </span>
+              )}
             </div>
           )}
 

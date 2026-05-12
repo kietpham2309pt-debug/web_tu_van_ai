@@ -218,6 +218,21 @@ function describeItem(item: ComboItem): string {
   return `${item.role}: ${name}`;
 }
 
+function shortRoleHint(role: string): string {
+  const r = role.toLowerCase();
+  if (/bếp từ/.test(r)) return "induction cooktop — install flush on the main counter";
+  if (/hút mùi|khử/.test(r)) return "rangehood — mount above the cooktop";
+  if (/rửa chén|rửa bát/.test(r)) return "dishwasher — place in a dedicated cabinet slot";
+  if (/lò nướng/.test(r)) return "oven — mount in a tall cabinet column";
+  if (/vi sóng|microwave/.test(r)) return "microwave — mount in a wall cabinet column";
+  if (/hấp|steam/.test(r)) return "steam oven — mount in a tall cabinet column";
+  if (/chậu rửa/.test(r)) return "kitchen sink — install undermount on the countertop";
+  if (/vòi rửa/.test(r)) return "kitchen faucet — mount next to the sink";
+  if (/tủ rượu|wine/.test(r)) return "wine cooler — integrate into the island base";
+  return `${role}`;
+}
+
+/** Mô tả thuần text (không reference). Dùng khi không có ảnh sản phẩm. */
 export function buildKitchenPrompt(args: {
   layout: KitchenLayout;
   style: KitchenStyle;
@@ -243,7 +258,43 @@ export function buildKitchenPrompt(args: {
     fengShuiHint ? `Color palette adjusted to: ${fengShuiHint}.` : "",
     `The kitchen MUST clearly and accurately feature these specific appliances, each rendered to match its exact described type, form factor and finish — do not substitute, merge or invent alternative shapes: ${itemList}.`,
     `Constraints: render exactly the listed appliances and nothing else — no extra ovens, no extra hoods, no second cooktop, no fridge, no people, no text, no logos.`,
-    `Magazine-quality interior photography, sharp focus on appliance details (especially the cooktop zones, the hood shape, the dishwasher panel), balanced soft daylight, 8K, photorealistic, color-graded warm and inviting.`,
+    `Magazine-quality interior photography, sharp focus on appliance details, balanced soft daylight, 8K, photorealistic, color-graded warm and inviting.`,
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+/** Prompt cho mode reference (compose từ ảnh sản phẩm thật). */
+export function buildComposePrompt(args: {
+  layout: KitchenLayout;
+  style: KitchenStyle;
+  scenario: Scenario;
+  tier: ComboTierData;
+  fengShuiHint?: string;
+  /** Danh sách item TƯƠNG ỨNG với thứ tự reference images đã gửi lên OpenAI. */
+  referencedItems: ComboItem[];
+}): string {
+  const { layout, style, scenario, tier, fengShuiHint, referencedItems } = args;
+  const houseHint =
+    scenario.filters.houseTypes[0] === "biet-thu"
+      ? "spacious luxury Vietnamese villa kitchen"
+      : scenario.filters.houseTypes[0] === "nha-pho"
+      ? "Vietnamese townhouse kitchen, 4m wide"
+      : "modern Vietnamese apartment kitchen";
+
+  const placements = referencedItems
+    .map((it, i) => `(Reference ${i + 1}) ${shortRoleHint(it.role)}`)
+    .join("; ");
+
+  return [
+    `Compose a professional architectural interior photograph of a ${houseHint}.`,
+    `Layout: ${LAYOUT_DESC[layout]}.`,
+    `Design: ${STYLE_DESC[style]}.`,
+    fengShuiHint ? `Color palette adjusted to: ${fengShuiHint}.` : "",
+    `Place the appliances shown in the reference images into the kitchen, in this order: ${placements}.`,
+    `Keep every appliance's exact shape, proportions, finish color, panel layout, control buttons and brand badge visually faithful to its reference image. Do not redesign or stylize the appliances — render each one as if photographed in this kitchen.`,
+    `Show only the appliances from the reference images plus the cabinetry, countertop, walls, floor and lighting that match the chosen design. Do not invent additional appliances. No people, no text overlays, no logos beyond what is already on the reference appliances.`,
+    `Photorealistic magazine-quality interior photography, sharp focus, natural perspective, balanced soft daylight, 8K, color-graded warm and inviting.`,
   ]
     .filter(Boolean)
     .join(" ");
