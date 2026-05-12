@@ -1,0 +1,12 @@
+node_modules
+.next
+out
+build
+.env*.local
+.DS_Store
+*.log
+tsconfig.tsbuildinfo
+src/data/products.json
+src/data/summary.json
+src/data/category-counts.json
+*.docx
