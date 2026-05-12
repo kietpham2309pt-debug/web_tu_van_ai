@@ -106,7 +106,7 @@ export default function KitchenDemo({ initialScenarioId, initialTier, initialEle
                 <Loader2 className="h-10 w-10 animate-spin" />
                 <div className="text-sm font-semibold">AI đang vẽ căn bếp của bạn...</div>
                 <div className="px-6 text-center text-xs text-stone-300">
-                  Nhanh: 15-40 giây (OpenAI/Gemini paid) · Chậm: 1-3 phút (free Pollinations FLUX, queue đông)
+                  Thời gian dự kiến: 40-90 giây · Đôi khi 1-2 phút khi OpenAI bận. Vui lòng đợi, không tải lại trang.
                 </div>
               </div>
             )}
