@@ -26,17 +26,33 @@ const LAYOUT_DESC: Record<KitchenLayout, string> = {
 };
 
 const LAYOUT_DESC_WITH_ISLAND: Record<KitchenLayout, string> = {
-  "i-shape": "I-shape kitchen with a single continuous wall of cabinets PLUS a parallel central kitchen island; the cooktop sits on the island, the rest of the appliances on the wall",
-  "l-shape": "L-shape kitchen (two perpendicular counter runs against the walls) PLUS a central kitchen island in the open space; the cooktop sits on the island below the suspended island hood",
-  "u-shape": "U-shape kitchen wrapping three walls PLUS a central kitchen island in the middle of the U (effectively a G-shape); the cooktop sits on the central island below the suspended island hood",
-  "island": "open-plan kitchen with a central kitchen island and a parallel back wall of cabinets, contemporary Vietnamese penthouse",
+  "i-shape":
+    "I-shape kitchen formed by ONE long continuous wall counter run holding the wet zone and the tall storage column, PLUS a SEPARATE central kitchen island in the open space parallel to that wall — the island sits in front of (parallel to) the wall, NOT touching it, and holds ONLY the cooktop below the suspended island hood. There must be at least 1.0 m of clear walkway between the wall counter and the island.",
+  "l-shape":
+    "L-shape kitchen formed by TWO PERPENDICULAR wall counter runs joined at an inside corner (both runs MUST be clearly visible as cabinetry along two different walls of the room), PLUS a SEPARATE central kitchen island standing in the open space in front of the L-corner. The island is NOT attached to either wall — there must be clear walkway space on all sides of it. The island holds ONLY the cooktop below the suspended island hood. The wet zone (sink + dishwasher) is on ONE of the L's perpendicular wall counters; the tall storage column (oven/microwave/steam) is on the OTHER wall counter or at the far end of one of them. The room must clearly show: (1) wall counter A, (2) wall counter B perpendicular to A, (3) the floating island in front of the L-corner — three distinct cabinetry surfaces total, NOT collapsed into one.",
+  "u-shape":
+    "U-shape kitchen wrapping three walls PLUS a SEPARATE central kitchen island in the middle of the U (effectively a G-shape); the cooktop sits on the central island below the suspended island hood; the three wall runs hold the wet zone (sink + dishwasher), the tall storage column (oven/microwave) and additional storage cabinetry respectively. All three wall runs and the island must be clearly visible as four distinct cabinetry surfaces.",
+  "island":
+    "open-plan kitchen with a SEPARATE central kitchen island holding ONLY the cooktop below the suspended island hood, and a parallel back wall of cabinets holding the wet zone (sink + dishwasher) and tall storage column (oven/microwave). The island floats free in the open space, NOT touching the back wall.",
 };
 
 const CAMERA_DESC: Record<KitchenLayout, string> = {
   "i-shape": "Camera framed head-on, perpendicular to the single wall, showing the entire wall of cabinets from end to end at roughly eye level",
-  "l-shape": "Camera at a 3/4 angle from the open corner of the L, both counter runs clearly visible, vanishing point off-center",
+  "l-shape": "Camera at a 3/4 angle from the open corner of the L, both perpendicular counter runs clearly visible meeting at the inside corner in the background, vanishing point off-center",
   "u-shape": "Camera positioned at the open fourth-wall side looking into the U, slightly elevated so all THREE counter runs (left wall, back wall, right wall) are visible and clearly form a U around the room",
   "island": "Camera at a 3/4 angle from the living-room side, showing the central island in the foreground and the back wall of cabinets behind it",
+};
+
+/** Camera khi layout bị ép có island. Cần thấy CẢ cạnh tường + đảo. */
+const CAMERA_DESC_WITH_ISLAND: Record<KitchenLayout, string> = {
+  "i-shape":
+    "Camera at a 3/4 angle from the open side of the room, the entire wall counter visible in the background and the parallel floating island in the foreground — both surfaces clearly separated by a wide walkway",
+  "l-shape":
+    "Camera at a 3/4 angle from the open side of the L, slightly elevated so that THREE separate cabinetry surfaces are simultaneously visible: (1) wall counter A and (2) wall counter B meeting at the L-corner in the background, plus (3) the floating central island in the foreground. The walkway gap between the L wall-corner and the island must be clearly visible",
+  "u-shape":
+    "Camera at the open fourth-wall side looking into the U, slightly elevated so all THREE wall counters AND the floating central island in the middle of the U are simultaneously visible — four distinct cabinetry surfaces in frame",
+  "island":
+    "Camera at a 3/4 angle from the living-room side, the floating central island in the foreground and the parallel back wall of cabinets in the background, with a clear walkway gap between them",
 };
 
 const STYLE_DESC: Record<KitchenStyle, string> = {
@@ -259,10 +275,16 @@ function composePlacementHint(item: ComboItem): string {
   // BẾP TỪ
   if (/bếp từ/.test(role)) {
     const zones = detectCookingZones(name, item.sku || "") ?? 3;
-    const widthHint = /domino|30cm|đôi/.test(blob) ? "narrow 30 cm domino-width" : "60 cm-wide";
+    const isWide = /\b80\s*cm|800mm|pxe8|pid8|pxv8|series\s*8/i.test(`${name} ${item.sku || ""}`);
+    const widthHint = /domino|30cm|đôi/.test(blob)
+      ? "narrow 30 cm domino-width"
+      : isWide
+      ? "wide 80 cm"
+      : "60 cm-wide";
     return (
-      `${widthHint} induction cooktop with EXACTLY ${zones} cooking zones on flat black ceramic glass — ` +
-      `flush-mount into the main cooking-zone counter; NO gas burners, NO grates, NO knobs, NO visible flame; ` +
+      `${widthHint} induction cooktop with EXACTLY ${zones} cooking zones (each zone must be clearly visible as a separate printed circle/square outline on the black ceramic glass — do NOT merge into a single dark panel) — ` +
+      `flush-mount into the main cooking-zone counter; touch-control slider strip along the front edge; ` +
+      `NO gas burners, NO grates, NO knobs, NO visible flame; ` +
       `keep the reference's exact zone layout, touch-control strip position and brand badge`
     );
   }
@@ -417,8 +439,8 @@ function buildFixtureGuidance(items: ComboItem[]): string {
     const name = resolveItemName(sink);
     const blob = name.toLowerCase();
     const isGranite = /granite|đá|composite/.test(blob);
-    const isDouble = /đôi|double|2\s*hộc|2\s*hố|hố lệch|2.bowl|two.bowl/.test(blob);
-    const isOffset = /lệch|offset|unequal/.test(blob);
+    const isDouble = /đôi|double|2\s*hộc|2\s*hố|hố lệch|2.bowl|two.bowl|860|vigo|veggo/.test(blob);
+    const isOffset = /lệch|offset|unequal|vigo|veggo/.test(blob);
     const surface = isGranite
       ? "matte granite stone surface with the exact speckle/grain pattern of the reference"
       : /smart|hạt|nano/.test(blob)
@@ -426,28 +448,29 @@ function buildFixtureGuidance(items: ComboItem[]): string {
       : "brushed stainless steel surface with directional satin grain";
     const layout = isDouble
       ? isOffset
-        ? "TWO bowls of UNEQUAL size (one large main bowl on one side, one smaller secondary bowl on the other) separated by a thin stainless divider — exactly matching the asymmetric layout of the reference"
+        ? "TWO clearly separate bowl openings cut into the countertop — one LARGE main bowl (~50 cm wide × 40 cm deep) on one side and one SMALL secondary bowl (~20 cm wide × 40 cm deep) on the other side, separated by a thin (~3 cm) stainless divider strip that is visibly continuous with the rim. Both bowl rims must be visible from the camera angle. The smaller bowl is NOT a drain board, NOT a soap tray, NOT a faucet platform — it is a fully functional second sink bowl with its own drain at the bottom"
         : "TWO equally-sized bowls separated by a thin stainless divider, matching the reference exactly"
       : "single deep rectangular bowl with the exact internal corner radius from the reference";
     parts.push(
-      `Sink (${name}): replicate the reference image pixel-faithfully — same ${surface}, ${layout}, same rim profile, same drain grate position and shape. Install as an undermount cutout in the quartz countertop on its own dedicated counter section; do NOT place it adjacent to the cooktop, do NOT crop or shrink the bowl(s), do NOT cover the bowl(s) with appliances, and do NOT collapse two bowls into one. Every bowl interior must be clean, dry, empty and clearly visible.`
+      `Sink (${name}): replicate the reference image pixel-faithfully — same ${surface}; ${layout}; same rim profile and same drain grate position. Install as an undermount cutout in the quartz countertop on its own dedicated counter section; do NOT place it adjacent to the cooktop, do NOT crop or shrink the bowl(s), do NOT cover the bowl(s) with appliances, do NOT collapse two bowls into one, and do NOT replace the second bowl with a drainboard or grooved drying area. Every bowl interior must be clean, dry, empty and clearly visible.`
     );
   }
 
   if (faucet) {
     const name = resolveItemName(faucet);
     const blob = name.toLowerCase();
-    const isPullDown = /dây rút|pull.down|kéo|spray/.test(blob);
-    const colorTone = /gun metal|gun-metal|đen mờ/.test(blob)
-      ? "matte gun-metal grey PVD finish"
+    const isPullDown = /dây rút|pull.down|kéo|spray|tháp/.test(blob);
+    const isGunMetal = /gun metal|gun-metal|đen mờ|gunmetal/.test(blob);
+    const colorTone = isGunMetal
+      ? "matte gun-metal grey PVD finish — a dark warm-toned charcoal grey with a soft sheen, clearly DIFFERENT FROM stainless steel and DIFFERENT FROM polished chrome (do NOT render as silver, do NOT render as chrome, do NOT render as black)"
       : /chrome/.test(blob)
       ? "polished mirror-chrome PVD finish (the same multilayer reflective chrome as the reference)"
       : "polished chrome PVD finish";
     const head = isPullDown
-      ? "pull-down spray head with the exact nozzle profile, hose collar and detail lines visible in the reference"
+      ? "removable pull-down spray head — there must be a visible seam/joint where the spray head detaches from the spout body, the head is slightly thicker than the spout and has a distinct nozzle face matching the reference (NOT a smooth one-piece spout)"
       : "fixed cylindrical spout outlet with the exact aerator face from the reference";
     parts.push(
-      `Faucet (${name}): deck-mounted on the countertop directly behind the center of the sink bowl, base sitting flat on the quartz (no gap, no hovering, no wall-mount). Replicate the reference: same swan-neck arch height-to-bowl ratio, same neck curvature, same ${colorTone}, same single-lever handle position and shape, same ${head}. The spout outlet must aim into the bowl center. Do NOT invent a different faucet shape, do NOT stretch / shrink / re-bend the neck, do NOT duplicate the faucet elsewhere on the counter, do NOT add a secondary filter faucet.`
+      `Faucet (${name}): deck-mounted on the countertop directly behind the center of the sink bowl, base sitting flat on the quartz (no gap, no hovering, no wall-mount). Replicate the reference: same swan-neck arch height-to-bowl ratio, same neck curvature, ${colorTone}, same single-lever handle position and shape (the lever must be in the SAME gun-metal grey finish as the body — not chrome), ${head}. The spout outlet must aim into the larger bowl center. Do NOT invent a different faucet shape, do NOT stretch / shrink / re-bend the neck, do NOT duplicate the faucet elsewhere on the counter, do NOT add a secondary filter faucet, do NOT change the finish to chrome/stainless.`
     );
   }
 
@@ -510,8 +533,16 @@ export function buildComposePrompt(args: {
       ? "Vietnamese townhouse kitchen, 4m wide"
       : "modern Vietnamese apartment kitchen";
 
+  // ROSTER: ánh xạ 1-1 giữa thứ tự ảnh attached và thiết bị thật.
+  const rosterLines = referencedItems.map((it, i) => {
+    const name = resolveItemName(it);
+    return `  • Image ${i + 1} = ${it.role} — ${name}`;
+  });
+  const roster = rosterLines.join("\n");
+  const refCount = referencedItems.length;
+
   const placements = referencedItems
-    .map((it, i) => `(Reference ${i + 1}) ${composePlacementHint(it)}`)
+    .map((it, i) => `(Image ${i + 1} · ${it.role}) ${composePlacementHint(it)}`)
     .join("; ");
 
   const fixtureBlock = buildFixtureGuidance(referencedItems);
@@ -552,11 +583,14 @@ export function buildComposePrompt(args: {
 
   // Layout có thể bị override khi có island hood (không thể wall-mount island hood).
   const effectiveLayoutDesc = hasIslandHood ? LAYOUT_DESC_WITH_ISLAND[layout] : LAYOUT_DESC[layout];
-  const effectiveCamera = CAMERA_DESC[layout];
+  const effectiveCamera = hasIslandHood ? CAMERA_DESC_WITH_ISLAND[layout] : CAMERA_DESC[layout];
 
-  // Zone organization với island override.
+  // Zone organization với island override — ép wet zone trên tường, KHÔNG bao giờ trên đảo.
   const effectiveZoneOrg = hasIslandHood
-    ? `Place the cooktop on the CENTRAL ISLAND below the suspended island rangehood. ${ZONE_ORG[layout].replace(/cooking zone \(cooktop \+ rangehood[^)]*\)/i, "cooking zone (cooktop now on the central island)")}`
+    ? `Place the cooktop on the CENTRAL ISLAND below the suspended island rangehood — the island carries the cooktop AND NOTHING ELSE (no sink, no faucet, no dishwasher, no oven, no microwave on the island). All other appliances live on the perimeter wall counter runs. ${ZONE_ORG[layout].replace(
+        /cooking zone \(cooktop \+ rangehood[^)]*\)/i,
+        "cooking zone (cooktop only, sitting on the central island below the suspended hood)",
+      )}`
     : ZONE_ORG[layout];
 
   // Đếm số thiết bị "âm tủ" để hướng dẫn cột tủ cao đứng.
@@ -591,8 +625,15 @@ export function buildComposePrompt(args: {
     negatives.push("a countertop microwave is NOT acceptable — the microwave must be flush-mounted inside the cabinet column");
   if (hasIntegratedDw)
     negatives.push("the integrated dishwasher must have NO visible appliance front and NO brand badge — only a matching cabinet panel");
-  if (hasIslandHood)
+  if (hasIslandHood) {
     negatives.push("the rangehood is SUSPENDED FROM THE CEILING by metal cables or a thin rod above the central island, with NO contact to any wall — do NOT wall-mount it");
+    negatives.push("the central island carries ONLY the cooktop — do NOT place the sink, faucet, dishwasher, oven, microwave, wine cooler or any other appliance on the island; the island top is a clean uninterrupted quartz slab except for the cooktop cut-out");
+    negatives.push("the island MUST be a free-standing block in the open space, NOT attached to any wall, with clear walkway space on all four sides");
+  }
+  // Layout-specific: khi user chọn L mà có island hood, AI dễ "sụp" còn 1 cạnh tường.
+  if (hasIslandHood && /l-shape|u-shape/.test(`${effectiveLayoutDesc}`.toLowerCase())) {
+    negatives.push("do NOT collapse the layout into a single straight wall counter plus island — the perimeter wall cabinetry MUST form the chosen layout shape (L = two perpendicular wall runs meeting at a corner; U = three wall runs wrapping the room) with the island as a SEPARATE additional surface in the open space");
+  }
   if (hasSlimHood)
     negatives.push("the rangehood is hidden INSIDE the upper wall cabinet (only its front control strip and pull-out slider visible) — do NOT render a chimney, do NOT render a canopy, NO duct above");
   if (hasHood && !hasIslandHood && !hasSlimHood && !referencedItems.some((it) => /hút mùi/i.test(it.role) && /pyramid|tháp|chimney|treo tường|kim cương/i.test(resolveItemName(it))))
@@ -601,39 +642,39 @@ export function buildComposePrompt(args: {
   const absenceLine = `Strictly absent items (do NOT render any of these even though they are common in kitchens): ${absences.join("; ")}.`;
 
   return [
-    // === MỞ ĐẦU: tuyên ngôn về reference làm chuẩn ===
-    `GROUND-TRUTH MANDATE: The attached reference product images are the absolute ground truth. The prose below is secondary guidance — when in doubt, follow the references' exact shape / proportions / finish / colors / brand badges over any text description.`,
+    // === [1] GROUND-TRUTH MANDATE + REFERENCE ROSTER (đặt đầu, ưu tiên cao nhất) ===
+    `GROUND-TRUTH MANDATE: The ${refCount} attached product photos are the absolute ground truth. Their shape, proportions, finish color, surface texture, panel layout, control buttons and brand badges are binding — when text and image disagree, follow the image.`,
+    `REFERENCE ROSTER — the ${refCount} attached images correspond, in this exact order, to:\n${roster}\nALL ${refCount} appliances above MUST appear in the final rendered kitchen as separate visible objects. None may be omitted, merged into another, duplicated, or replaced by a different appliance type. Before finalizing the image, mentally count the visible appliances and confirm that all ${refCount} are present.`,
 
-    // === BỐI CẢNH ===
+    // === [2] BỐI CẢNH ===
     `Compose a professional architectural interior photograph of a ${houseHint}.`,
 
-    // === LAYOUT — ép buộc 2 lần ===
+    // === [3] LAYOUT — ép buộc ===
     `LAYOUT (mandatory, do NOT substitute with another layout): ${effectiveLayoutDesc}.`,
     `Camera: ${effectiveCamera}.`,
 
-    // === STYLE — ép buộc cabinet rule ===
+    // === [4] STYLE — ép buộc cabinet rule ===
     `DESIGN STYLE (mandatory): ${STYLE_DESC[style]}. ${CABINETRY_RULE[style]}`,
     fengShuiHint ? `Color palette adjustment: ${fengShuiHint}.` : "",
 
-    // === SPATIAL ORG ===
+    // === [5] SPATIAL ORG + TALL COLUMN (gom 2 quy tắc về tổ chức không gian) ===
     `Spatial organization: ${effectiveZoneOrg}`,
-
-    // === ĐẶT THIẾT BỊ ===
-    `Place the appliances shown in the reference images into the kitchen, in this order: ${placements}.`,
-
-    // === FIDELITY DIRECTIVE ===
-    `For each appliance, replicate its reference image 1:1 — same shape, same proportions, same finish color, same surface texture, same panel layout, same control buttons, same brand badge position. Mentally rotate each reference to match the kitchen viewing angle but preserve every proportion. Apply the kitchen's daylight, warm color grading and depth of field to every appliance so it looks photographed in place, not pasted from a catalog. Keep edges of metallic appliances crisp against the cabinetry — do not let them blend in.`,
-
-    // === COLUMN + FIXTURE + ABSENCE + NEGATIVES ===
     `Tall storage column rule: ${tallColumnInstr}`,
+
+    // === [6] CRITICAL FIXTURE FIDELITY (đẩy lên trước per-item vì đây là zone fail nhất) ===
     fixtureBlock,
+
+    // === [7] PER-ITEM PLACEMENT (đã có roster ở trên nên ngắn lại được) ===
+    `Per-appliance placement and form (each item below maps 1-to-1 to the corresponding Image N in the roster — replicate that image's exact shape / proportions / finish / brand badge, then mentally rotate it to match the kitchen viewing angle): ${placements}.`,
+
+    // === [8] ABSENCES + NEGATIVES ===
     absenceLine,
     `Constraints: ${negatives.join("; ")}.`,
 
-    // === LAYOUT REINFORCEMENT (lặp lại lần 2, gpt-image-1 cần repetition) ===
-    `Final layout reminder: this kitchen MUST be a ${LAYOUTS.find((l) => l.id === layout)?.label || layout} — ${effectiveLayoutDesc}. Do NOT render it as a different layout shape even if the references suggest otherwise.`,
+    // === [9] FINAL CHECKLIST + LAYOUT REMINDER (gpt-image-1 cần repetition) ===
+    `FINAL SELF-CHECK before output — verify ALL of these are true in the rendered image; if any fails, redo: (a) exactly ${refCount} appliances visible, one for each entry in the roster; (b) layout is ${LAYOUTS.find((l) => l.id === layout)?.label || layout} — ${effectiveLayoutDesc}; (c) cabinetry matches the style rule above; (d) sink + faucet + dishwasher are on a PERIMETER WALL counter run (never on the central island if there is one), and the sink shape matches the fixture-fidelity block exactly; (e) none of the strictly-absent items are visible; (f) the faucet finish matches its reference (gun-metal stays gun-metal, chrome stays chrome — they are NOT interchangeable).`,
 
-    // === PHOTO QUALITY ===
+    // === [10] PHOTO QUALITY ===
     `Photorealistic magazine-quality interior photography, sharp focus on every appliance detail, natural perspective, balanced soft daylight, 8K, color-graded warm and inviting.`,
   ]
     .filter(Boolean)
